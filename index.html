@@ -1,0 +1,487 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <!-- CSS da página -->
+  <link rel="stylesheet" href="./styles.css"/>
+
+  <!-- Font Awesome Pro -->
+  <link rel="stylesheet" href="./all.min.css" />
+
+  <!-- Outros -->
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pedido Dev - Desenvolvimento</title>
+</head>
+<body>
+  <ul class="toast-alerts-container"></ul>
+
+  <div id="lightbox" style="opacity: 0;display: none">
+    <img id="lightbox-image" src="https://claudia.abril.com.br/wp-content/uploads/2020/02/pizza-quatro-queijos-comitc3aa-umami.jpg" width="80%" />
+  </div>
+
+  <div class="container">
+    <div class="action-bar">
+      <!-- TODO: Adicionar link de voltar -->
+      <a href="loremipsum.com">
+        <i class="fa fa-arrow-left"></i>
+        <span>Selecione os sabores</span>
+      </a>
+    </div>
+   
+    <main>
+      <div class="progress-bar-container">
+        <div class="progress-bar">
+          <!--
+            TODO: Adicionar manualmente a porcentagem de acordo com a etapa
+            
+            Primeira etapa: 0%
+            Segunda etapa: 50%
+            Terceita etapa: 100%
+          -->
+          <div style="width: 50%"></div>
+        </div>
+
+        <!-- TODO: Adicionar os itens manualmente -->
+        <!--
+          TODO: Definir o atributo state pra cada item
+        
+          Se já estiver marcado: actived
+          Se estiver selecionado: selected
+          Se ainda não estiver marcado: disabled
+        -->
+        <div class="item" state="actived">
+          <!-- TODO: Adicionar o icone de fundo, o número da etapa, e o nome da etapa, respectivamente em cada item -->
+          <i class="fad fa-pizza"></i>
+          <span>1</span>
+          <span style="left: 0">Tamanho</span>
+        </div>
+
+        <div class="item" state="selected">
+          <i class="fad fa-pizza-slice"></i>
+          <span>2</span>
+          <span>Sabores</span>
+        </div>
+
+        <div class="item" state="disabled">
+          <i class="fad fa-acorn"></i>
+          <span>3</span>
+          <span style="right: 0">Complementos</span>
+        </div>
+      </div>
+
+      <!-- TODO: Adicionar a o alerta  -->
+      <div class="alert-box">
+        <i class="fad fa-exclamation-circle"></i>
+
+        <p>Essa é uma caixa alerta</p>
+        <p>Use para dar informações ao usuário</p>
+      </div>
+
+      <!-- TODO: Adicionar função ao formulário -->
+      <form>
+        <div class="search-input-container">
+          <div>
+            <i class="fad fa-search"></i>
+          </div>
+
+          <input
+            name="search-input"
+            type="text"
+            placeholder="Pesquisar sabor"
+          />
+        </div>   
+
+        <div class="filter-order-container">
+          <span>Ordenar por: </span>
+
+          <!--
+            random: Ordem aleatória
+            alphabetic: Ordem alfabetica
+            value: Ordem de preço
+          -->
+          <button action="random">
+            <i class="fas fa-random"></i>
+          </button>
+
+          <button action="alphabetic">
+            <i class="fas fa-sort-alpha-down"></i>
+          </button>
+          
+          <button action="value">
+            <i class="fas fa-dollar-sign"></i>
+          </button>
+        </div>
+
+        <ul class="items-list"></ul>
+        
+        <button class="confirm-button">
+          <span style="margin-right: 5px;">Confimar</span>
+          <i class="fa fa-arrow-right"></i>
+        </button> 
+      </form>
+    </main>
+  </div>
+
+  <script>
+    /* TODO: Passar as propriedades do server para o frontend pelo PHP */
+    /*
+      items: {
+        index: Index do servidor
+        title: Titulo do item
+        description: Descrição do item
+        image: Imagem do produto (Opcional)
+        addition: Acréscimo do valor (Opcional)
+        amount: Quantidade de produtos (OBS: Caso queira passar essa propriedade pelo servidor)
+        oldPrice: Valor antigo do produto (OBS: Passe em numero e em reais)
+        currentPrice: Valor do produto com desconto (OBS: Passe em numero, em reais e apenas se tiver desconto)
+      }
+      min: Minimo de itens
+      max: Maximo do itens
+    */
+    const LIST = {
+      items: [
+        {
+          index: 1,
+          title: "Quatro queijos",
+          description: "Um sabor simples, mas muito delicioso, quando o queijo é de qualidade, e eu preciso ocupar mais espaço no texto",
+          image: "https://claudia.abril.com.br/wp-content/uploads/2020/02/pizza-quatro-queijos-comitc3aa-umami.jpg",
+          amount: 0,
+          addition: 2.99,
+          oldPrice: 47.99,
+          currentPrice: 43.99
+        },
+        {
+          index: 2,
+          title: "CCC",
+          description: "Um sabor simples, mas muito saboroso",
+          image: "https://claudia.abril.com.br/wp-content/uploads/2020/02/pizza-quatro-queijos-comitc3aa-umami.jpg",
+          amount: 0,
+          currentPrice: 109.99
+        },
+        {
+          index: 3,
+          title: "BBB",
+          description: "Um sabor simples, mas muito saboroso",
+          amount: 0,
+          oldPrice: 47.99,
+          currentPrice: 31.99
+        },
+      ],
+      min: 1,
+      max: 2
+    }
+
+    class ListRender {
+      totalPrice = 0
+      totalAmount = 0
+
+      form = document.querySelector('form')
+      listElement = document.querySelector("ul.items-list")
+      searchInput = document.querySelector('input[name=search-input]')
+      orderButtons = document.querySelectorAll(".filter-order-container button")
+      confirmButton = document.querySelector('form .confirm-button')
+      searchText = ""
+
+      constructor () {
+        const creationOrderButton = document.querySelector('button[action=random]')
+        const alphabeticOrderButton = document.querySelector('button[action=alphabetic]')
+        const priceOrderButton = document.querySelector('button[action=value]')
+
+        this.searchInput.oninput = event => {
+          this.searchText = event.target.value
+          this.render()
+        }
+
+        alphabeticOrderButton.onclick = () => {
+          this.setSelectedButton(alphabeticOrderButton)
+          LIST.items.sort((a, b) => (a.title > b.title) ? 1 : ((b.title > a.title) ? -1 : 0))
+          this.render()
+        }
+        priceOrderButton.onclick = () => {
+          this.setSelectedButton(priceOrderButton)
+          LIST.items.sort((a, b) => (a.currentPrice > b.currentPrice) ? 1 : ((b.currentPrice > a.currentPrice) ? -1 : 0))
+          this.render()
+        }
+        creationOrderButton.onclick = () => {
+          this.setSelectedButton(creationOrderButton)
+          LIST.items.sort((a, b) => (a.index > b.index) ? 1 : ((b.index > a.index) ? -1 : 0))
+          this.render()
+        }
+
+        this.form.onsubmit = event => {
+          event.preventDefault()
+
+          
+        }
+
+        this.confirmButton.onclick = () => {
+          if (this.totalAmount < LIST.min) {
+            createToast(`Selecione pelo menos ${LIST.min} ${LIST.min === 1 ? "sabor" : "sabores"}`, "fad fa-exclamation-circle")
+          }
+        }        
+        
+        if (this.totalAmount < LIST.min) this.confirmButton.classList.add('disabled')
+
+        // TODO: Adicionar código de acordo com a ordem
+        /*
+          Pela ordem de criação:
+
+          this.setSelectedButton(creationOrderButton)
+          LIST.items.sort((a, b) => (a.index > b.index) ? 1 : ((b.index > a.index) ? -1 : 0))
+
+
+          Pela ordem alfabética:
+
+          this.setSelectedButton(alphabeticOrderButton)
+          LIST.items.sort((a, b) => (a.title > b.title) ? 1 : ((b.title > a.title) ? -1 : 0))
+
+
+          Pela ordem de preço:
+
+          this.setSelectedButton(priceOrderButton)
+          LIST.items.sort((a, b) => (a.currentPrice > b.currentPrice) ? 1 : ((b.currentPrice > a.currentPrice) ? -1 : 0))
+        */
+        this.setSelectedButton(creationOrderButton)
+        LIST.items.sort((a, b) => (a.index > b.index) ? 1 : ((b.index > a.index) ? -1 : 0))
+        
+        this.render();
+        
+        LIST.items.map(value => {
+          this.totalAmount += value.amount;
+
+          if (value.amount === 0) document.querySelector(`[key=item-${value.index}] .options`).classList.add('minimized')
+        })
+      }
+
+      setSelectedButton(button) {
+        this.orderButtons.forEach(button => button.removeAttribute('selected'))
+        button.setAttribute('selected', '')
+      }
+
+      _verifyMin (){
+        this.totalAmount >= LIST.min ? this.confirmButton.classList.remove('disabled') : this.confirmButton.classList.add('disabled')
+      }
+
+      _addItem (index) {
+        const optionsContainer = document.querySelector(`[key=item-${index}] .options`)
+
+        if (!this.listElement.classList.contains('maximized')) {
+          const span = document.querySelector(`[key=item-${index}] .options span`)
+          const item = LIST.items.find(item => item.index === index)
+
+          // Aumentando os valores
+          item.amount += 1
+          this.totalAmount += 1
+
+          // Atualizando valores
+          span.textContent = item.amount
+
+          const remainingFlavors = LIST.max - this.totalAmount
+
+          if (LIST.max === 2) {
+            if (this.totalAmount === 1) {
+              createToast(`Selecione a outra metade`, "fad fa-exclamation-circle")
+            } else {
+              createToast(`Sabores selecionados. Clique em confirmar para prosseguir`)
+            }
+          } else {
+            if (LIST.max - this.totalAmount > 0) {
+              if (this.totalAmount >= LIST.min) {
+                if (remainingFlavors > 0) {
+                  createToast(`Você ainda pode selecionar ${remainingFlavors} ${remainingFlavors > 1 ? "sabores" : "sabor"}. Clique em confirmar para prosseguir`, "fad fa-exclamation-circle")
+                }
+              } else {
+                createToast(`Você ainda precisa selecionar ${LIST.min - this.totalAmount} ${(LIST.min - this.totalAmount) > 1 ? "sabores" : "sabor"}.`, "fad fa-exclamation-circle")
+              }
+            } else {
+              createToast(`Sabores selecionados. Clique em confirmar para prosseguir`)
+            }
+          }
+
+          // Verificando maximo
+          (this.totalAmount === LIST.max) ? this.listElement.classList.add('maximized') : this.listElement.classList.remove('maximazed')
+
+          // Remover minimizado
+          optionsContainer.classList.remove('minimized')
+
+          this._verifyMin()
+        }
+      }
+      
+      _removeItem(index) {
+        const optionsContainer = document.querySelector(`[key=item-${index}] .options`)
+
+        if (!optionsContainer.classList.contains('minimized')) {
+          const span = document.querySelector(`[key=item-${index}] .options span`)
+          const item = LIST.items.find(item => item.index === index)
+
+          // Diminuindo os valores
+          item.amount -= 1
+          this.totalAmount -= 1
+
+          // Atualizando valores
+          span.textContent = item.amount
+
+          const remainingFlavors = LIST.max - this.totalAmount
+
+          if (LIST.max === 2) {
+            if (this.totalAmount === 1) {
+              createToast(`Selecione a outra metade`, "fad fa-exclamation-circle")
+            } else {
+              createToast(`Sabores selecionados. Clique em confirmar para prosseguir`)
+            }
+          } else {
+            if (LIST.max - this.totalAmount > 0) {
+              if (this.totalAmount < LIST.min) {
+                createToast(`Você ainda precisa selecionar ${LIST.min - this.totalAmount} ${(LIST.min - this.totalAmount) > 1 ? "sabores" : "sabor"}.`, "fad fa-exclamation-circle")
+              }
+            } else {
+              createToast(`Sabores selecionados. Clique em confirmar para prosseguir`)
+            }
+          }
+
+          // Verificando minimo
+          (item.amount === 0) ? optionsContainer.classList.add('minimized') : optionsContainer.classList.remove('minimized')
+          
+          // Remover maximizado
+          this.listElement.classList.remove('maximized')
+
+
+          this._verifyMin()
+        }
+      }
+
+      render() {
+        this.listElement.innerHTML = null
+
+        LIST.items.forEach(value => {
+          if (value.title.toLowerCase().includes(this.searchText.toLowerCase())) {
+            this.listElement.innerHTML +=
+            `
+            <li key="item-${value.index}">
+              <div class="text-container">
+                <div class="title-and-description-container">
+                  <h4>${value.title}</h4>
+                  <p>${value.description}</p>
+                  
+                </div>
+
+                <div class="prices-container">
+                  ${value.addition ? `<p class="addition">Acréscimo: + ${value.addition.toLocaleString('pt-BR', { minimumFractionDigits: 2, style: 'currency', currency: 'BRL' })}</p>` : ""}
+                  <div>
+                    <div>
+                      <span class="current-price">${value.currentPrice.toLocaleString('pt-BR', { minimumFractionDigits: 2 , style: 'currency', currency: 'BRL' })}</span>
+                      <span class="price">${value?.oldPrice?.toLocaleString("pt-BR", { minimumFractionDigits: 2 , style: "currency", currency: "BRL" }) || ""}</span>
+                    </div> 
+                    
+                    <div class="options">
+                      <span>${value.amount}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="ilustration" style="background-image: url(${value.image});${value.image ? "background-color: rgba(0, 0, 0, 0.05)" : ""}"></div>
+            </li>
+            `
+          }
+        })
+
+        LIST.items.map(value => {
+          const { index } = value;
+
+          if (value.title.toLowerCase().includes(this.searchText.toLowerCase())) {
+            const optionsContainer = document.querySelector(`[key=item-${index}] .options`)
+
+            const removeButton = document.createElement('button')
+            removeButton.innerHTML = `<i class="fas fa-minus"></i>`
+            removeButton.onclick = () => this._removeItem(index)
+
+            if (value.amount === 0) {
+              optionsContainer.classList.add('minimized')
+            }
+            
+            const addButton = document.createElement('button')
+            addButton.innerHTML = `<i class="fas fa-plus"></i>`
+            addButton.onclick = () => this._addItem(index)
+
+            optionsContainer.prepend(removeButton)
+            optionsContainer.appendChild(addButton)
+
+            const ilustration = document.querySelector(`[key=item-${index}] .ilustration`)
+
+            if(ilustration) {
+              ilustration.onclick = () => {
+                const backgroundImageStyle = ilustration.style.backgroundImage
+                const url = backgroundImageStyle.substring(5, backgroundImageStyle.length - 2)
+
+                if(url !== "undefined") {
+                  lightbox.setImage(url)
+                  lightbox.show()
+                }
+              }
+            }
+          }
+        })
+      }
+    }
+
+    class Lightbox {
+      containerElement = document.getElementById('lightbox')
+      imageElement = document.getElementById('lightbox-image')
+
+      constructor () {
+        this.containerElement.onclick = () => this.hide()
+        this.imageElement.onclick = event => event.stopPropagation()
+      }
+
+      setImage (src) {
+        this.imageElement.src = src
+      }
+
+      hide () {
+        this.containerElement.style.opacity = "0"
+        setTimeout(() => this.containerElement.style.display = "none", 250)
+      }
+
+      show () {
+        this.containerElement.style.display = "flex"
+        setTimeout(() => this.containerElement.style.opacity = "1", 0)
+      }
+    }
+
+    function createToast (title, iconClassName = "fad fa-check-circle") {
+      const container = document.querySelector('.toast-alerts-container')
+
+      const containerDiv = document.createElement('div')
+      containerDiv.className = "toast-alert"
+      containerDiv.style.top = `-${containerDiv.offsetHeight}px`
+
+      const icon = document.createElement('i')
+      icon.className = iconClassName
+
+      const textContent = document.createElement('p')
+      textContent.textContent = title
+
+      containerDiv.appendChild(icon)
+      containerDiv.appendChild(textContent)
+
+      container.appendChild(containerDiv)
+
+      setTimeout(() => {
+        containerDiv.style.top = "60px"
+        
+        setTimeout(() => {
+          containerDiv.style.top = `-${containerDiv.offsetHeight}px`
+          setTimeout(() => containerDiv.remove(), 500)
+        }, 3000)
+      }, 0)
+    }
+
+    const listRender = new ListRender()
+    const lightbox = new Lightbox()
+  </script>
+  <script src="./script.js"></script>
+</body>
+</html>
