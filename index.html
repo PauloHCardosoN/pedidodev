@@ -169,7 +169,7 @@
         },
       ],
       min: 1,
-      max: 2
+      max: 3
     }
 
     class ListRender {
@@ -326,17 +326,15 @@
           const remainingFlavors = LIST.max - this.totalAmount
 
           if (LIST.max === 2) {
-            if (this.totalAmount === 1) {
-              createToast(`Selecione a outra metade`, "fad fa-exclamation-circle")
-            } else {
-              createToast(`Sabores selecionados. Clique em confirmar para prosseguir`)
+            switch (this.totalAmount) {
+              case 0: return createToast(`Selecione pelo menos 1 sabor`, "fad fa-exclamation-circle")
+              case 1: return createToast(`Selecione a outra metade`, "fad fa-exclamation-circle")
+              case 2: return createToast(`Sabores selecionados. Clique em confirmar para prosseguir`)
             }
           } else {
-            if (LIST.max - this.totalAmount > 0) {
-              if (this.totalAmount < LIST.min) {
-                createToast(`Você ainda precisa selecionar ${LIST.min - this.totalAmount} ${(LIST.min - this.totalAmount) > 1 ? "sabores" : "sabor"}.`, "fad fa-exclamation-circle")
-              }
-            } else {
+            if (this.totalAmount === LIST.min - 1) {
+              createToast(`Sabores pelo menos ${LIST.min} ${LIST.min === 1 ? "sabor" : "sabores"}`, "fad fa-exclamation-circle")
+            } else if (LIST.max - this.totalAmount < 0) {
               createToast(`Sabores selecionados. Clique em confirmar para prosseguir`)
             }
           }
